@@ -1,0 +1,15 @@
+services:
+  ministatus:
+    build:
+      context: .
+      args:
+        APP_VERSION: local
+    image: ministatus:local
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:5000/health')"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
