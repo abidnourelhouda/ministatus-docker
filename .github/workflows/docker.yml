@@ -63,7 +63,22 @@ jobs:
         with:
           name: trivy-reports
           path: trivy-report.*
-          
+
+      - name: Générer le SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}:ci
+          format: cyclonedx
+          output: sbom.json
+          exit-code: "0"
+
+      - name: Publier le SBOM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+
       - name: Quality gate (HIGH et CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
