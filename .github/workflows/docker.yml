@@ -1,0 +1,56 @@
+
+name: Docker CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+  pull_request:
+    branches:
+      - main
+
+env:
+  IMAGE: ministatus
+
+jobs:
+  build-scan:
+    name: Build, Lint et Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Récupération du code source
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      # 2. Vérification du Dockerfile
+      - name: Lint du Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+      # 3. Construction de l'image Docker
+      - name: Build de l'image
+        run: |
+          docker build \
+            --build-arg APP_VERSION=ci \
+            -t ${{ env.IMAGE }}:ci \
+            .
+
+      # 4. Exécution des tests unitaires
+      - name: Tests dans le conteneur
+        run: |
+          docker run --rm ${{ env.IMAGE }}:ci python -m unittest -v
+
+      # 5. Vérification de l'image construite
+      - name: Vérification de l'image Docker
+        run: |
+          docker image inspect ${{ env.IMAGE }}:ci
+
+      # 6. Affichage de la version de l'application
+      - name: Vérification de la version
+        run: |
+          docker run --rm ${{ env.IMAGE }}:ci python --version
