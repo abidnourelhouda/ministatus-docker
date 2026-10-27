@@ -54,3 +54,48 @@ jobs:
       - name: Vérification de la version
         run: |
           docker run --rm ${{ env.IMAGE }}:ci python --version
+
+      
+      - name: Rapport Trivy (JSON)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:ci
+          format: json
+          output: trivy-report.json
+          exit-code: "0"
+
+      - name: Rapport Trivy (HTML)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:ci
+          format: template
+          template: "@/contrib/html.tpl"
+          output: trivy-report.html
+          exit-code: "0"
+
+      - name: Résumé dans la page du run
+        if: always()
+        run: |
+          echo "### Rapport Trivy" >> "$GITHUB_STEP_SUMMARY"
+          for s in CRITICAL HIGH MEDIUM; do
+            n=$(jq "[.Results[]?.Vulnerabilities[]? | select(.Severity==\"$s\")] | length" trivy-report.json)
+            echo "- $s : $n" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Publier les rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: trivy-report.*
+
+      - name: Quality gate (HIGH et CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:ci
+          format: table
+          severity: HIGH,CRITICAL
+          vuln-type: library
+          ignore-unfixed: true
+          exit-code: "1"
+
