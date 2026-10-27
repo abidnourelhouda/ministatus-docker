@@ -57,7 +57,7 @@ jobs:
 
       
       - name: Rapport Trivy (JSON)
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:ci
           format: json
@@ -65,7 +65,7 @@ jobs:
           exit-code: "0"
 
       - name: Rapport Trivy (HTML)
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:ci
           format: template
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Quality gate (HIGH et CRITICAL)
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE }}:ci
           format: table
